@@ -1,0 +1,29 @@
+services:
+  bd:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: ingestor
+      POSTGRES_PASSWORD: ingestor
+      POSTGRES_DB: ingestor
+    ports:
+      - "5435:5432"
+    volumes:
+      - datos-ingestor:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "ingestor"]
+      interval: 5s
+      retries: 5
+
+  api:
+    build: .
+    environment:
+      DSN_BD: postgresql://ingestor:ingestor@bd:5432/ingestor
+      API_BASE: https://rickandmortyapi.com/api
+    ports:
+      - "8000:8000"
+    depends_on:
+      bd:
+        condition: service_healthy
+
+volumes:
+  datos-ingestor:
